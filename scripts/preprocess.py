@@ -1,14 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 
-import argparse
-import json
-import os
-import six
+import argparse, json, os, six, h5py, codecs
 import numpy as np
-import h5py
-import codecs
-
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--input_txt', default='data/tiny-shakespeare.txt')
