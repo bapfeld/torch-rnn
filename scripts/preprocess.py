@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 
-import argparse, json, os, six, h5py, codecs
+import argparse, json, os, six, h5py, codecs, re, collections
 import numpy as np
 
 parser = argparse.ArgumentParser()
@@ -19,14 +19,14 @@ if __name__ == '__main__':
   if args.encoding == 'bytes': args.encoding = None
 
   # First go the file once to see how big it is and to build the vocab
-  token_to_idx = {}
-  total_size = 0
   with codecs.open(args.input_txt, 'r', args.encoding) as f:
-    for line in f:
-      total_size += len(line)
-      for char in line:
-        if char not in token_to_idx:
-          token_to_idx[char] = len(token_to_idx) + 1
+    raw_data = f.read()
+    words = re.findall(r'\w+', raw_data)
+    counter = collections.Counter(words)
+    count_pairs = sorted(counter.items(), key=lambda x: -x[1])
+    tokens, _ = zip(*count_pairs)
+    token_to_idx = dict(zip(tokens, range(len(tokens))))
+    total_size = len(re.findall(r'\n', raw_data))
 
   # Now we can figure out the split sizes
   val_size = int(args.val_frac * total_size)
@@ -58,8 +58,9 @@ if __name__ == '__main__':
   split_idx, cur_idx = 0, 0
   with codecs.open(args.input_txt, 'r', args.encoding) as f:
     for line in f:
-      for char in line:
-        splits[split_idx][cur_idx] = token_to_idx[char]
+      words = re.findall(r'\w+', line)
+      for word in words:
+        splits[split_idx][cur_idx] = token_to_idx[word]
         cur_idx += 1
         if cur_idx == splits[split_idx].size:
           split_idx += 1
